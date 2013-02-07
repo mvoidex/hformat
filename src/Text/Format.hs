@@ -3,11 +3,12 @@
 -- | Format string with named args
 --
 -- >format "My name is $name, I am $age years old" ["name" %= "Joe", "age" %= 24]
+-- >-- "My name is Joe, I am 24 years old"
 --
 -- To escape '$', double it. Format string can be also used recursively with @(%%)@ instead of @(%=)@
 --
 -- >format "$$x is $x, and $$r is $r" ["x" %= 5, "r" %% "$x + $x"] -- Note (%%) instead of (%=)
---
+-- >-- "$x is 5, and $r is 5 + 5"
 module Text.Format (
     FormatValue(..),
     FormatArg, FormatArgs,
@@ -27,6 +28,7 @@ type FormatArgs = [FormatArg]
 
 -- | format function. Accepts format string and arguments:
 -- >format "My name is $name, I am $age years old" ["name" %= "Joe", "age" %= 24]
+-- >-- "My name is Joe, I am 24 years old"
 format :: String -> FormatArgs -> Text
 format fmt args = pack $ format' fmt args where
     format' :: String -> FormatArgs -> String
