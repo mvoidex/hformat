@@ -1,5 +1,13 @@
 {-# LANGUAGE DefaultSignatures, FlexibleInstances #-}
 
+-- | Format string with named args
+--
+-- >format "My name is $name, I am $age years old" ["name" %= "Joe", "age" %= 24]
+--
+-- To escape '$', double it. Format string can be also used recursively with @(%%)@ instead of @(%=)@
+--
+-- >format "$$x is $x, and $$r is $r" ["x" %= 5, "r" %% "$x + $x"] -- Note (%%) instead of (%=)
+--
 module Text.Format (
     FormatValue(..),
     FormatArg, FormatArgs,
@@ -17,7 +25,8 @@ data FormatValue = FormatString String | FormatPure Text
 type FormatArg = (String, FormatValue)
 type FormatArgs = [FormatArg]
 
--- | format "My name is $name, I am $age years old" $ ["name" %= "Jack", "age" %= 24]
+-- | format function. Accepts format string and arguments:
+-- >format "My name is $name, I am $age years old" ["name" %= "Joe", "age" %= 24]
 format :: String -> FormatArgs -> Text
 format fmt args = pack $ format' fmt args where
     format' :: String -> FormatArgs -> String
@@ -32,7 +41,7 @@ format fmt args = pack $ format' fmt args where
         (name, fmt') = span isAlpha fmt
     format' (c:fmt) args = c : format' fmt args
 
--- | FormatShow class
+-- | FormatShow class, by default using @show@
 class FormatShow a where
     formatShow :: a -> Text
     default formatShow :: Show a => a -> Text
