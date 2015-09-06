@@ -24,6 +24,7 @@ import Prelude.Unicode
 import Control.Applicative
 import Data.List (find)
 import Data.Maybe (fromMaybe, listToMaybe)
+import qualified Data.Text as T
 import Data.Text.Lazy (Text, unpack)
 import Data.Text.Lazy.Builder (Builder)
 import qualified Data.Text.Lazy.Builder as B
@@ -102,6 +103,9 @@ instance FormatBuild Bool
 
 instance FormatBuild Text where
 	formatBuild = B.fromLazyText
+
+instance FormatBuild T.Text where
+	formatBuild = B.fromText
 
 class Hole a where
 	hole ∷ a → [FormatArg]
