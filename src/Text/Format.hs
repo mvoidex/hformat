@@ -110,8 +110,8 @@ instance FormatBuild T.Text where
 class Hole a where
 	hole ∷ a → [FormatArg]
 
-instance {-# OVERLAPPING #-} Hole FormatArg where
-	hole = return
+instance Hole Builder where
+	hole = return ∘ FormatPos
 
 instance {-# OVERLAPPING #-} Hole [FormatArg] where
 	hole = id
