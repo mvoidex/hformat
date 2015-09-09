@@ -1,6 +1,8 @@
 hformat
 =======
 
+[![Hackage version](https://img.shields.io/hackage/v/hformat.svg?style=flat)](http://hackage.haskell.org/package/hformat) [![Build Status](https://travis-ci.org/mvoidex/hformat.png)](https://travis-ci.org/mvoidex/hformat)
+
 Format string with named args
 <pre>
 -- Named args
@@ -14,3 +16,5 @@ Format string with named args
 -- Double braces to escape them
 "{} and {{}}" ~~ 10 ≡ "10 and {}"
 </pre>
+
+See examples in [Test.hs](/tests/Test.hs)
