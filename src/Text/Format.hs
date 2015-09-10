@@ -68,7 +68,7 @@ build fstr = B.toLazyText $ mconcat $ build' 0 fstr where
 		[] → error $ "Can't parse formatter at " ++ fstr'
 		(f, fstr''):_ → formatArg' f args : build' i (Format fstr'' args)
 	build' i (Format fstr' args) = fromString s : build' i (Format fstr'' args) where
-		(s, fstr'') = break (≡ '{') fstr'
+		(s, fstr'') = break (∈ "{}") fstr'
 	formatArg' ∷ Formatter → [FormatArg] → Builder
 	formatArg' (Formatter (Left name) defVal) args = fromMaybe (error $ "Argument " ++ name ++ " not set") (lookArg <|> fmap B.fromString defVal) where
 		lookArg = do
