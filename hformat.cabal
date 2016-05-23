@@ -1,5 +1,5 @@
 name:                hformat
-version:             0.1.0.0
+version:             0.1.0.1
 synopsis:            Simple Haskell formatting
 homepage:            http://github.com/mvoidex/hformat
 license:             BSD3
@@ -12,12 +12,12 @@ cabal-version:       >=1.10
 library
   hs-source-dirs: src
   default-language: Haskell2010
-  ghc-options: -threaded -Wall -fno-warn-tabs
+  ghc-options: -Wall -fno-warn-tabs
   default-extensions: UnicodeSyntax
   exposed-modules:     
     Text.Format
   build-depends:
-    base >= 4.8 && < 4.9,
+    base >= 4.8 && < 5,
     base-unicode-symbols >= 0.2,
     text >= 1.2.1
 
@@ -29,7 +29,7 @@ test-suite test
   default-language: Haskell2010
   default-extensions: UnicodeSyntax
   build-depends:
-    base >= 4.8 && < 4.9,
+    base >= 4.8 && < 5,
     base-unicode-symbols >= 0.2,
     text >= 1.2.1,
     hspec,
