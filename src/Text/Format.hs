@@ -3,9 +3,9 @@
 -- | Format string with named args
 --
 -- >-- Named args
--- >"My name is {name}, I am {age} years old" ~~ ("name" %= "Joe") ~~ ("age" %= 24) ≡ "My name is Joe, I am 24 years old"
+-- >"My name is {name}, I am {age} years old" ~~ ("name" ~% "Joe") ~~ ("age" ~% 24) ≡ "My name is Joe, I am 24 years old"
 -- >-- Arg can have default value
--- >"{var:x} = {val:10}" ~~ ("var" %= y) ≡ "y = 10"
+-- >"{var:x} = {val:10}" ~~ ("var" ~% y) ≡ "y = 10"
 -- >-- Numeric position can be used
 -- >"{0} {1} {0}" ~~ "foo" ~~ "bar" ≡ "foo bar foo"
 -- >-- Positions can be omitted
@@ -14,9 +14,9 @@
 -- >"{} and {{}}" ~~ 10 ≡ "10 and {}"
 module Text.Format (
 	FormatArg(..), Format(..), Formatter(..),
-	build,
+	prebuild, build,
 	FormatBuild(..), Hole(..), fmt, FormatResult(..),
-	format, (~~), (%=)
+	format, formats, (~~), (~%)
 	) where
 
 import Prelude.Unicode
@@ -38,6 +38,9 @@ data Format = Format {
 	formatString ∷ String,
 	formatArgs ∷ [FormatArg] }
 
+instance Show Format where
+	show = unpack ∘ prebuild
+
 instance IsString Format where
 	fromString str = Format str []
 
@@ -57,8 +60,14 @@ instance Read Formatter where
 			return $ Just v'
 		return $ Formatter (maybe (Left n) Right $ readMaybe n) v
 
+prebuild ∷ Format → Text
+prebuild = buildFormat True
+
 build ∷ Format → Text
-build fstr = B.toLazyText $ mconcat $ build' 0 fstr where
+build = buildFormat False
+
+buildFormat ∷ Bool → Format → Text
+buildFormat pre fstr = B.toLazyText $ mconcat $ build' 0 fstr where
 	build' ∷ Int → Format → [Builder]
 	build' _ (Format "" _) = []
 	build' i (Format ('{':'{':fstr') args) = B.singleton '{' : build' i (Format fstr' args)
@@ -70,18 +79,24 @@ build fstr = B.toLazyText $ mconcat $ build' 0 fstr where
 	build' i (Format fstr' args) = fromString s : build' i (Format fstr'' args) where
 		(s, fstr'') = break (∈ "{}") fstr'
 	formatArg' ∷ Formatter → [FormatArg] → Builder
-	formatArg' (Formatter (Left name) defVal) args = fromMaybe (error $ "Argument " ++ name ++ " not set") (lookArg <|> fmap B.fromString defVal) where
-		lookArg = do
-			FormatNamed _ fval ← find byName args
-			return fval
-		byName (FormatNamed n _) = n ≡ name
-		byName _ = False
-	formatArg' (Formatter (Right i) defVal) args = fromMaybe (error $ "Argument at index " ++ show i ++ " not set") (lookIdx <|> fmap B.fromString defVal) where
-		lookIdx = do
-			FormatPos fval ← listToMaybe $ drop i $ filter isPos args
-			return fval
-		isPos (FormatPos _) = True
-		isPos _ = False
+	formatArg' f@(Formatter (Left name) defVal) args
+		| pre = fromMaybe (formatBuild f) lookArg
+		| otherwise = fromMaybe (error $ "Argument " ++ name ++ " not set") (lookArg <|> fmap formatBuild defVal)
+		where
+			lookArg = do
+				FormatNamed _ fval ← find byName args
+				return fval
+			byName (FormatNamed n _) = n ≡ name
+			byName _ = False
+	formatArg' f@(Formatter (Right i) defVal) args
+		| pre = fromMaybe (formatBuild f) lookIdx
+		| otherwise = fromMaybe (error $ "Argument at index " ++ show i ++ " not set") (lookIdx <|> fmap formatBuild defVal)
+		where
+			lookIdx = do
+				FormatPos fval ← listToMaybe $ drop i $ filter isPos args
+				return fval
+			isPos (FormatPos _) = True
+			isPos _ = False
 
 -- | FormatBuild class, by default using @show@
 class FormatBuild a where
@@ -107,11 +122,17 @@ instance FormatBuild Text where
 instance FormatBuild T.Text where
 	formatBuild = B.fromText
 
+instance FormatBuild Formatter where
+	formatBuild = formatBuild ∘ show
+
 class Hole a where
 	hole ∷ a → [FormatArg]
 
 instance Hole Builder where
 	hole = return ∘ FormatPos
+
+instance {-# OVERLAPPING #-} Hole FormatArg where
+	hole = return
 
 instance {-# OVERLAPPING #-} Hole [FormatArg] where
 	hole = id
@@ -122,8 +143,8 @@ instance {-# OVERLAPPING #-} Hole [[FormatArg]] where
 instance {-# OVERLAPPABLE #-} FormatBuild a ⇒ Hole a where
 	hole = return ∘ FormatPos ∘ formatBuild
 
-fmt ∷ Hole a ⇒ a → [FormatArg]
-fmt = hole
+fmt ∷ FormatBuild a ⇒ a → FormatArg
+fmt = FormatPos ∘ formatBuild
 
 class FormatResult r where
 	formatResult ∷ Format → r
@@ -140,12 +161,15 @@ instance {-# OVERLAPPABLE #-} IsString s ⇒ FormatResult s where
 format ∷ FormatResult r ⇒ String → r
 format = formatResult ∘ fromString
 
+formats ∷ FormatResult r ⇒ String → [FormatArg] → r
+formats f = formatResult ∘ Format f
+
 infixl 7 ~~
 
 (~~) ∷ (Hole a, FormatResult r) ⇒ Format → a → r
 fstr ~~ arg = formatResult $ fstr { formatArgs = formatArgs fstr ++ hole arg }
 
-infixr 8 %=
+infixr 8 ~%
 
-(%=) ∷ FormatBuild a ⇒ String → a → [FormatArg]
-name %= value = [FormatNamed name (formatBuild value)]
+(~%) ∷ FormatBuild a ⇒ String → a → FormatArg
+name ~% value = FormatNamed name (formatBuild value)
