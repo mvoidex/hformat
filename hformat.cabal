@@ -1,5 +1,5 @@
 name:                hformat
-version:             0.2.0.0
+version:             0.3.0.0
 synopsis:            Simple Haskell formatting
 description: String formatting
 homepage:            http://github.com/mvoidex/hformat
@@ -20,11 +20,14 @@ library
   default-language: Haskell2010
   ghc-options: -Wall -fno-warn-tabs
   default-extensions: UnicodeSyntax
-  exposed-modules:     
+  exposed-modules:
     Text.Format
+    Text.Format.Flags
+    Text.Format.Colored
   build-depends:
     base >= 4.8 && < 5,
     base-unicode-symbols >= 0.2,
+    ansi-terminal >= 0.6,
     text >= 1.2.1
 
 test-suite test
