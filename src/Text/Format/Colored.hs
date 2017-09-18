@@ -18,9 +18,9 @@ coloredLine ∷ Formatted → IO ()
 coloredLine = hColoredLine stdout
 
 hColored ∷ Handle → Formatted → IO ()
-hColored h (Formatted fs) = mapM_ go fs >> setSGR [] where
-	go (FormattedPart flags v) = setFlags flags >> hPutStr h v >> setSGR []
-	setFlags = setSGR ∘ mapMaybe toSGR
+hColored h (Formatted fs) = mapM_ go fs >> hSetSGR h [] where
+	go (FormattedPart flags v) = setFlags flags >> hPutStr h v >> hSetSGR h []
+	setFlags = hSetSGR h ∘ mapMaybe toSGR
 	toSGR "bold" = Just $ SetConsoleIntensity BoldIntensity
 	toSGR "italic" = Just $ SetItalicized True
 	toSGR "undelined" = Just $ SetUnderlining SingleUnderline
