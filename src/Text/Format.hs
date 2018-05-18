@@ -28,6 +28,7 @@ import Control.Applicative
 import Data.Char (intToDigit)
 import Data.List (find, intercalate, nub)
 import Data.Maybe (fromMaybe, listToMaybe)
+import Data.Semigroup (Semigroup(..))
 import qualified Data.Text as T
 import Data.Text.Lazy (Text, unpack)
 import Data.String
@@ -49,6 +50,9 @@ newtype Formatted = Formatted { formattedParts ∷ [FormattedPart] } deriving (E
 
 instance IsString Formatted where
 	fromString = Formatted ∘ return ∘ fromString
+
+instance Semigroup Formatted where
+	Formatted l <> Formatted r = Formatted $ l ++ r
 
 instance Monoid Formatted where
 	mempty = Formatted []
