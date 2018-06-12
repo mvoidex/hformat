@@ -43,6 +43,9 @@ main = hspec $ do
 	describe "prebuild" $
 		it "should show partially formatted" $
 			show (format "{0} ≡ {1}" ~~ str "foo" ∷ Format) ≡ str "foo ≡ {1}"
+	describe "list of named arguments" $
+		it "should list the named arguments" $
+			getNamedArguments "Positional arguments are ignored: {0} {} {2}. I want just the following, without repetition: {foo}, {bar} and {foo}." ≡ ["foo", "bar"]
 
 str ∷ String → String
 str = id
