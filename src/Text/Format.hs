@@ -15,7 +15,7 @@
 module Text.Format (
 	FormattedPart(..), Formatted(..), withFlags,
 	FormatArg(..), Format(..), Formatter(..),
-	prebuild, build,
+	prebuild, build, getNamedArguments,
 	Formattable(..), Hole(..), fmt, FormatResult(..),
 	format, formats, (~~), (~%),
 
@@ -131,6 +131,24 @@ buildFormat pre fstr = build' 0 fstr where
 				return $ fval fmtCfgs
 			isPos (FormatPos _) = True
 			isPos _ = False
+
+getNamedArguments ∷ Format → [String]
+getNamedArguments = nub ∘ getNamedArguments'
+	where
+		getNamedArguments' ∷ Format → [String]
+		getNamedArguments' (Format "" _) = mempty
+		getNamedArguments' (Format ('{':'{':fstr') args) = getNamedArguments' (Format fstr' args)
+		getNamedArguments' (Format ('}':'}':fstr') args) = getNamedArguments' (Format fstr' args)
+		getNamedArguments' (Format ('{':'}':fstr') args) = getNamedArguments' (Format fstr' args)
+		getNamedArguments' (Format fstr@('{':fstr') args) = case reads fstr of
+			[] → error $ "Can't parse formatter at " ++ fstr'
+			(f, fstr''):_ → getNamedArgument f `mappend` getNamedArguments' (Format fstr'' args)
+			where
+		getNamedArguments' (Format fstr' args) = getNamedArguments' (Format fstr'' args) where
+			(_, fstr'') = break (∈ "{}") fstr'
+		getNamedArgument ∷ Formatter → [String]
+		getNamedArgument (Formatter (Left name) _ _) = [name]
+		getNamedArgument _ = mempty
 
 -- | Formattable class, by default using @show@
 class Formattable a where
