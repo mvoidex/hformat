@@ -24,6 +24,9 @@ library
     Text.Format
     Text.Format.Flags
     Text.Format.Colored
+  if !impl(ghc >= 8.0)
+    build-depends:
+      semigroups >= 0.18.2 && < 0.19
   build-depends:
     base >= 4.8 && < 5,
     base-unicode-symbols >= 0.2,
